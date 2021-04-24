@@ -32,16 +32,16 @@ const mainMenu = () => {
                 viewEmployees();
                 break;
             case "View all employees by department":
-                //viewByDepartment();
+                viewByDepartment();
                 break;
             case "View all employees by role":
-                //viewByRole();
+                viewByRole();
                 break;
             case "Add Employee":
-                //addEmployee();
+                addEmployee();
                 break;
             case "Remove Employee":
-                //removeEmployee();
+                removeEmployee();
                 break;
             case "Update Employee Role":
                 //updateRole();
@@ -54,15 +54,111 @@ const mainMenu = () => {
 };
 
 const viewEmployees = () => {
-    connection.query(
-        `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
-        INNER JOIN department ON (role.department_id = department.id) ORDER BY employee.id ASC`, (err, result) => {
+    const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
+        INNER JOIN department ON (role.department_id = department.id) ORDER BY employee.id ASC`;
+    connection.query(query, (err, result) => {
             if(err) throw err;
             console.table(result);
             mainMenu();
         }
     )
-}
+};
+
+const viewByDepartment = () => {
+    inquirer
+    .prompt([
+        {
+            name: "department",
+            message: "Which department would you like to view? Sales = 1 , Finance = 2 , Engineering = 3, Legal = 4",
+            type: "list",
+            choices: [1,2,3,4],
+        }
+    ]).then(answers => {
+        const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
+        INNER JOIN department ON (role.department_id = department.id) WHERE (department.id = ?) ORDER BY employee.id ASC`;
+        connection.query(query, answers.department, (err, res) => {
+            console.table(res);
+            mainMenu();
+        })
+        }
+    );
+};
+const viewByRole= () => {
+    inquirer
+    .prompt([
+        {
+            name: "role",
+            message: "Which role would you like to view? Sales Lead = 1 , Salesperson = 2 , Lead Engineer = 3, Software Engineer = 4, Accountant = 5, Legal Team Lead = 6, Lawyer = 7",
+            type: "list",
+            choices: [1,2,3,4,5,6,7],
+        }
+    ]).then(answers => {
+        const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
+        INNER JOIN department ON (role.department_id = department.id) WHERE (role.id = ?) ORDER BY employee.id ASC`;
+        connection.query(query, answers.role, (err, res) => {
+            console.table(res);
+            mainMenu();
+        })
+        }
+    );
+};
+const addEmployee= () => {
+    inquirer
+    .prompt([
+        {
+            name: "firstname",
+            message: "What is the Employees first name?",
+            type: "input",
+        },
+        {
+            name: "lastname",
+            message: "What is the Employees last name?",
+            type: "input",
+        },
+        {
+            name: "roleid",
+            message: "What is the Employees Role?: Sales Lead = 1 , Salesperson = 2 , Lead Engineer = 3, Software Engineer = 4, Accountant = 5, Legal Team Lead = 6, Lawyer = 7",
+            type: "list",
+            choices: [1,2,3,4,5,6,7],
+        },
+    ]).then(answers => {
+        const query = `INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)`;
+        connection.query(query, [answers.firstname, answers.lastname, answers.roleid], (err, res) => {
+            console.log(`Employee ${answers.firstname} ${answers.lastname} added!`);
+            mainMenu();
+        })
+        }
+    );
+};
+
+const removeEmployee = () => {
+    connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, (err, res) => {
+        const empArray = [];
+        res.forEach(employee => {
+            empArray.push(`${employee.first_name} ${employee.last_name}`);
+        })
+        console.table(res);
+        console.log(empArray);
+        inquirer
+        .prompt([
+            {
+                name: "removethem",
+                type: "rawlist",
+                message: "Select an Employee to remove: ",
+                choices: empArray,
+
+            }
+        ]).then(answers => {
+            console.log(answers);
+            const delEmp = answers.removethem.split(" ");
+            connection.query(`DELETE FROM employee WHERE (employee.first_name = ? AND employee.last_name = ?)`,[delEmp], (err, res) => {
+                console.log(`Removed ${answers.removethem}`);
+                mainMenu();
+            })
+        })
+
+    });
+};
 
 connection.connect((err) => {
   if (err) throw err;
