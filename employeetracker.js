@@ -24,7 +24,7 @@ const mainMenu = () => {
             name: "choice",
             message: "What would you like to do?",
             type: "list",
-            choices: ["View all employees", "View all employees by department", "View all employees by role", "Add Employee", "Remove Employee", 'Update Employee Role', 'Update Employee Manager'],
+            choices: ["View all employees", "View all employees by department", "View all employees by role", "Add Employee", "Remove Employee", 'Update Employee Role', 'Update Employee Manager', 'Add Role', 'Add Department'],
         }
     ]).then(answers => {
         switch (answers.choice) {
@@ -49,6 +49,12 @@ const mainMenu = () => {
             case "Update Employee Manager":
                 //updateManager();
                 break;
+            case "Add Role": 
+                //addRole();
+                break;
+            case "Add Department":
+                //addDepartment();
+                break;
         }
     });
 };
@@ -63,7 +69,6 @@ const viewEmployees = () => {
         }
     )
 };
-
 const viewByDepartment = () => {
     inquirer
     .prompt([
@@ -130,15 +135,12 @@ const addEmployee= () => {
         }
     );
 };
-
 const removeEmployee = () => {
     connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, (err, res) => {
         const empArray = [];
         res.forEach(employee => {
             empArray.push(`${employee.first_name} ${employee.last_name}`);
         })
-        console.table(res);
-        console.log(empArray);
         inquirer
         .prompt([
             {
@@ -149,9 +151,9 @@ const removeEmployee = () => {
 
             }
         ]).then(answers => {
-            console.log(answers);
             const delEmp = answers.removethem.split(" ");
-            connection.query(`DELETE FROM employee WHERE (employee.first_name = ? AND employee.last_name = ?)`,[delEmp], (err, res) => {
+            console.log(delEmp);
+            connection.query(`DELETE FROM employee WHERE (first_name = ? AND last_name = ?)`,[delEmp[0], delEmp[1]], (err, res) => {
                 console.log(`Removed ${answers.removethem}`);
                 mainMenu();
             })
