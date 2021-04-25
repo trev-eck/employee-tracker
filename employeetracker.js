@@ -50,10 +50,10 @@ const mainMenu = () => {
                 //updateManager();
                 break;
             case "Add Role": 
-                //addRole();
+                addRole();
                 break;
             case "Add Department":
-                //addDepartment();
+                addDepartment();
                 break;
         }
     });
@@ -152,7 +152,6 @@ const removeEmployee = () => {
             }
         ]).then(answers => {
             const delEmp = answers.removethem.split(" ");
-            console.log(delEmp);
             connection.query(`DELETE FROM employee WHERE (first_name = ? AND last_name = ?)`,[delEmp[0], delEmp[1]], (err, res) => {
                 console.log(`Removed ${answers.removethem}`);
                 mainMenu();
@@ -161,6 +160,49 @@ const removeEmployee = () => {
 
     });
 };
+const addRole = () => {
+inquirer
+.prompt([
+    {
+        name: "title",
+        type: "input",
+        message: "What is the title of the new role?",
+    },
+    {
+        name: "salary",
+        type: "input",
+        message: "What is the salary of the new role?",
+    },
+    {
+        name: "department",
+        type: "input",
+        message: "Which department does the new role belong to? Sales = 1 , Finance = 2 , Engineering = 3, Legal = 4",
+        choices: [1,2,3,4],
+    },
+]).then(answers => {
+    connection.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', [answers.title, answers.salary, answers.department], (err, res) => {
+        console.log(`New Role: ${answers.title} created!`);
+        mainMenu();
+    })
+})
+};
+
+const addDepartment = () => {
+    inquirer
+    .prompt([
+        {
+            name: "name",
+            type: "input",
+            message: "What is the title of the new department?",
+        },
+    ]).then(answers => {
+        connection.query('INSERT INTO department (department) VALUES (?)', [answers.name], (err, res) => {
+            console.log(`New Department: ${answers.name} created!`);
+            mainMenu();
+        })
+    })
+    };
+    
 
 connection.connect((err) => {
   if (err) throw err;
