@@ -42,6 +42,6 @@ The application repository can be found at: https://github.com/trev-eck/employee
 
 A video demonstrating the application functionality can be found at: https://drive.google.com/file/d/11IqCkhZQ-p7thnaCaNGndNN-6JEuki08/view
 
-![screenshot of application in terminal](./images\screenshot.png)
+![screenshot of application in terminal](.\images\screenshot.png)
 
 This readme was generated using the ReadME Generator : https://github.com/trev-eck/readme-generator
