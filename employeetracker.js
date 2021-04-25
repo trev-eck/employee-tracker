@@ -44,10 +44,10 @@ const mainMenu = () => {
                 removeEmployee();
                 break;
             case "Update Employee Role":
-                //updateRole();
+                updateRole();
                 break;
             case "Update Employee Manager":
-                //updateManager();
+                updateManager();
                 break;
             case "Add Role": 
                 addRole();
@@ -186,7 +186,6 @@ inquirer
     })
 })
 };
-
 const addDepartment = () => {
     inquirer
     .prompt([
@@ -201,9 +200,77 @@ const addDepartment = () => {
             mainMenu();
         })
     })
-    };
-    
+};
+const updateRole = () => {
+    connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, (err, res) => {
+        const empArray = [];
+        res.forEach(employee => {
+            empArray.push(`${employee.first_name} ${employee.last_name}`);
+        })
+        connection.query('SELECT role.title FROM role', (error, result) => {
+        const roleArray = [];
+        result.forEach(role => {
+            roleArray.push(`${role.title}`);
+        })
+        inquirer
+        .prompt([
+            {
+                name: "employee",
+                type: "rawlist",
+                message: "Select an Employee to update their role: ",
+                choices: empArray,
+            },
+            {
+                name: "newrole",
+                type: "list",
+                message: "Select a new role: ",
+                choices: roleArray,
+            }
+        ]).then(answers => {
+            const theEmp = answers.employee.split(" ");
+            const index = roleArray.indexOf(answers.newrole) + 1;
+            connection.query(`UPDATE employee SET employee.role_id = ? WHERE (first_name = ? AND last_name = ?)`,[index, theEmp[0], theEmp[1]], (err, res) => {
+                console.log(`Updated ${answers.employee}'s role to ${answers.newrole}`);
+                mainMenu();
+            })
+        })
 
+    });
+    });
+};
+const updateManager = () => {
+    connection.query(`SELECT employee.first_name, employee.last_name, employee.id FROM employee`, (err, res) => {
+        if(err) throw err;
+        const empArray = [];
+        const idArray = [];
+        res.forEach(employee => {
+            empArray.push(`${employee.first_name} ${employee.last_name}`);
+            idArray.push(employee.id);
+        })
+        inquirer
+        .prompt([
+            {
+                name: "employee",
+                type: "rawlist",
+                message: "Select an Employee to update their manager: ",
+                choices: empArray,
+            },
+            {
+                name: "newmanager",
+                type: "rawlist",
+                message: "Select a new manager: ",
+                choices: empArray,
+            }
+        ]).then(answers => {
+            const theEmp = answers.employee.split(" ");
+            const index = idArray[empArray.indexOf(answers.newmanager)];
+            connection.query(`UPDATE employee SET employee.manager_id = ? WHERE (first_name = ? AND last_name = ?)`,[index, theEmp[0], theEmp[1]], (err, res) => {
+                console.log(`Updated ${answers.employee}'s manager to be ${answers.newmanager}`);
+                mainMenu();
+            })
+        })
+    });
+};
 connection.connect((err) => {
   if (err) throw err;
   console.log(`Connection as id ${connection.id}`);
