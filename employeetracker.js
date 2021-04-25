@@ -60,8 +60,7 @@ const mainMenu = () => {
 };
 
 const viewEmployees = () => {
-    const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
-        INNER JOIN department ON (role.department_id = department.id) ORDER BY employee.id ASC`;
+    const query = `SELECT emp.id, emp.first_name, emp.last_name, role.title, department.department, role.salary, man.last_name AS manager FROM employee emp LEFT JOIN employee man ON (emp.manager_id = man.id) INNER JOIN role ON (emp.role_id = role.id) INNER JOIN department ON (role.department_id = department.id) ORDER BY emp.id ASC`;
     connection.query(query, (err, result) => {
             if(err) throw err;
             console.table(result);
