@@ -58,7 +58,6 @@ const mainMenu = () => {
         }
     });
 };
-
 const viewEmployees = () => {
     const query = `SELECT emp.id, emp.first_name, emp.last_name, role.title, department.department, role.salary, CONCAT(man.first_name, ' ', man.last_name) AS manager FROM employee emp LEFT JOIN employee man ON (emp.manager_id = man.id) INNER JOIN role ON (emp.role_id = role.id) INNER JOIN department ON (role.department_id = department.id) ORDER BY emp.id ASC`;
     connection.query(query, (err, result) => {
@@ -75,7 +74,6 @@ const viewByDepartment = () => {
         result.forEach(dep => {
             depArray.push(`${dep.department}`);
         });
-        console.log(depArray);
     inquirer
     .prompt([
         {
@@ -86,7 +84,6 @@ const viewByDepartment = () => {
         }
     ]).then(answers => {
         const index = depArray.indexOf(answers.department) + 1;
-        console.log(index);
         const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
         INNER JOIN department ON (role.department_id = department.id) WHERE (department.id = ?) ORDER BY employee.id ASC`;
         connection.query(query, index, (err, res) => {
@@ -128,12 +125,19 @@ const viewByRole= () => {
     });
 };
 const addEmployee= () => {
-    
     connection.query('SELECT role.title FROM role', (error, result) => {
         const roleArray = [];
         result.forEach(role => {
             roleArray.push(`${role.title}`);
         })
+        connection.query('SELECT employee.first_name, employee.last_name, employee.id FROM employee', (err, res) => {
+            const manArray = [];
+            const manID = [];
+            res.forEach(employee =>{
+                manArray.push(`${employee.first_name} ${employee.last_name}`);
+                manID.push(employee.id);
+            })
+            manArray.push(`None`);
     inquirer
     .prompt([
         {
@@ -152,16 +156,25 @@ const addEmployee= () => {
             type: "rawlist",
             choices: roleArray,
         },
+        {
+            name: "manager",
+            message: "Who is this Employee's manager?",
+            type: "rawlist",
+            choices: manArray,
+        },
     ]).then(answers => {
         const index = roleArray.indexOf(answers.roleid) + 1;
-        const query = `INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)`;
-        connection.query(query, [answers.firstname, answers.lastname, index], (err, res) => {
+        const manIndex = manID[manArray.indexOf(answers.manager)];
+        const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+        connection.query(query, [answers.firstname, answers.lastname, index, manIndex], (err, res) => {
+            if(err) throw err;
             console.log(`${answers.roleid} ${answers.firstname} ${answers.lastname} added!`);
             mainMenu();
         })
         }
     );
     });
+});
 };
 const removeEmployee = () => {
     connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, (err, res) => {
@@ -188,7 +201,15 @@ const removeEmployee = () => {
 
     });
 };
+
+//update this dynamically
 const addRole = () => {
+    connection.query('SELECT department.department FROM department', (err, result) => {
+        if(err) throw err;
+        const depArray = [];
+        result.forEach(dep => {
+            depArray.push(`${dep.department}`);
+        });
 inquirer
 .prompt([
     {
@@ -203,16 +224,19 @@ inquirer
     },
     {
         name: "department",
-        type: "input",
-        message: "Which department does the new role belong to? Sales = 1 , Finance = 2 , Engineering = 3, Legal = 4",
-        choices: [1,2,3,4],
+        type: "rawlist",
+        message: "Which department does the new role belong to?",
+        choices: depArray,
     },
 ]).then(answers => {
-    connection.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', [answers.title, answers.salary, answers.department], (err, res) => {
+    const index = depArray.indexOf(answers.department) + 1;
+    connection.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', [answers.title, answers.salary, index], (err, res) => {
+        if (err) throw err;
         console.log(`New Role: ${answers.title} created!`);
         mainMenu();
     })
 })
+    });
 };
 const addDepartment = () => {
     inquirer
