@@ -60,7 +60,7 @@ const mainMenu = () => {
 };
 
 const viewEmployees = () => {
-    const query = `SELECT emp.id, emp.first_name, emp.last_name, role.title, department.department, role.salary, man.last_name AS manager FROM employee emp LEFT JOIN employee man ON (emp.manager_id = man.id) INNER JOIN role ON (emp.role_id = role.id) INNER JOIN department ON (role.department_id = department.id) ORDER BY emp.id ASC`;
+    const query = `SELECT emp.id, emp.first_name, emp.last_name, role.title, department.department, role.salary, CONCAT(man.first_name, ' ', man.last_name) AS manager FROM employee emp LEFT JOIN employee man ON (emp.manager_id = man.id) INNER JOIN role ON (emp.role_id = role.id) INNER JOIN department ON (role.department_id = department.id) ORDER BY emp.id ASC`;
     connection.query(query, (err, result) => {
             if(err) throw err;
             console.table(result);
@@ -69,42 +69,63 @@ const viewEmployees = () => {
     )
 };
 const viewByDepartment = () => {
+    connection.query('SELECT department.department FROM department', (err, result) => {
+        if(err) throw err;
+        const depArray = [];
+        result.forEach(dep => {
+            depArray.push(`${dep.department}`);
+        });
+        console.log(depArray);
     inquirer
     .prompt([
         {
             name: "department",
-            message: "Which department would you like to view? Sales = 1 , Finance = 2 , Engineering = 3, Legal = 4",
-            type: "list",
-            choices: [1,2,3,4],
+            message: "Which department would you like to view?",
+            type: "rawlist",
+            choices: depArray,
         }
     ]).then(answers => {
+        const index = depArray.indexOf(answers.department) + 1;
+        console.log(index);
         const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
         INNER JOIN department ON (role.department_id = department.id) WHERE (department.id = ?) ORDER BY employee.id ASC`;
-        connection.query(query, answers.department, (err, res) => {
+        connection.query(query, index, (err, res) => {
+            if(err) throw err;
             console.table(res);
             mainMenu();
         })
         }
     );
+    });
 };
 const viewByRole= () => {
+    
+    connection.query('SELECT role.title FROM role', (error, result) => {
+        if(error) throw error;
+        const roleArray = [];
+        result.forEach(role => {
+            roleArray.push(`${role.title}`);
+        });
     inquirer
     .prompt([
         {
             name: "role",
-            message: "Which role would you like to view? Sales Lead = 1 , Salesperson = 2 , Lead Engineer = 3, Software Engineer = 4, Accountant = 5, Legal Team Lead = 6, Lawyer = 7",
-            type: "list",
-            choices: [1,2,3,4,5,6,7],
+            message: "Which role would you like to view?",
+            type: "rawlist",
+            choices: roleArray,
         }
     ]).then(answers => {
+        const index = roleArray.indexOf(answers.role) + 1;
         const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department, role.salary FROM employee INNER JOIN role ON (employee.role_id = role.id) 
         INNER JOIN department ON (role.department_id = department.id) WHERE (role.id = ?) ORDER BY employee.id ASC`;
-        connection.query(query, answers.role, (err, res) => {
+        connection.query(query, index, (err, res) => {
+            if (err) throw err;
             console.table(res);
             mainMenu();
         })
         }
     );
+    });
 };
 const addEmployee= () => {
     
