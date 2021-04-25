@@ -108,6 +108,12 @@ const viewByRole= () => {
     );
 };
 const addEmployee= () => {
+    
+    connection.query('SELECT role.title FROM role', (error, result) => {
+        const roleArray = [];
+        result.forEach(role => {
+            roleArray.push(`${role.title}`);
+        })
     inquirer
     .prompt([
         {
@@ -122,18 +128,20 @@ const addEmployee= () => {
         },
         {
             name: "roleid",
-            message: "What is the Employees Role?: Sales Lead = 1 , Salesperson = 2 , Lead Engineer = 3, Software Engineer = 4, Accountant = 5, Legal Team Lead = 6, Lawyer = 7",
-            type: "list",
-            choices: [1,2,3,4,5,6,7],
+            message: "What is the Employees role?",
+            type: "rawlist",
+            choices: roleArray,
         },
     ]).then(answers => {
+        const index = roleArray.indexOf(answers.roleid) + 1;
         const query = `INSERT INTO employee (first_name, last_name, role_id) VALUES (?, ?, ?)`;
-        connection.query(query, [answers.firstname, answers.lastname, answers.roleid], (err, res) => {
-            console.log(`Employee ${answers.firstname} ${answers.lastname} added!`);
+        connection.query(query, [answers.firstname, answers.lastname, index], (err, res) => {
+            console.log(`${answers.roleid} ${answers.firstname} ${answers.lastname} added!`);
             mainMenu();
         })
         }
     );
+    });
 };
 const removeEmployee = () => {
     connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, (err, res) => {
